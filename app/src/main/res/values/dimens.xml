@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="font_size_text_title">21sp</dimen>
+    <dimen name="font_size_text_fields">18sp</dimen>
+
+    <dimen name="image_width">96dp</dimen>
+    <dimen name="image_height">120dp</dimen>
+    <dimen name="margin_default">8dp</dimen>
+    <dimen name="avatar_size">50dp</dimen>
+    <dimen name="margin_default_fab_button">16dp</dimen>
+</resources>

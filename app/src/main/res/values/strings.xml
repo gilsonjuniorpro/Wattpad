@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">Wattpad</string>
+    <string name="tab_stories">Stories</string>
+    <string name="tab_favorites">Favorites</string>
+
+    <string name="loading">loading...</string>
+    <string name="error_loading">Loading error</string>
+    <string name="image_story">image story</string>
+    <string name="user_avatar">user avatar</string>
+    <string name="search_story">search story</string>
+</resources>
