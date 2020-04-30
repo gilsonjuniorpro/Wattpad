@@ -4,12 +4,14 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.AbsListView
 import android.widget.SearchView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.wattpad.ca.R
 import com.wattpad.ca.adapters.WattpadListAdapter
 import com.wattpad.ca.databinding.FragmentWattpadListBinding
@@ -21,13 +23,10 @@ import com.wattpad.ca.viewmodel.WattpadListViewModel
 class WattpadListFragment : Fragment() {
 
     lateinit var binding: FragmentWattpadListBinding
+    lateinit var layoutManager:LinearLayoutManager
 
     private val viewModel: WattpadListViewModel by lazy {
         ViewModelProvider(this).get(WattpadListViewModel::class.java)
-    }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
     }
 
     override fun onCreateView(
@@ -44,11 +43,8 @@ class WattpadListFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val layoutManager = LinearLayoutManager(requireContext())
+        layoutManager = LinearLayoutManager(requireContext())
         binding.recyclerView.layoutManager = layoutManager
-        /*binding.recyclerView.addItemDecoration(
-            DividerItemDecoration(requireContext(), layoutManager.orientation)
-        )*/
 
         viewModel.state.observe(viewLifecycleOwner, Observer { state ->
             when (state) {
@@ -58,8 +54,28 @@ class WattpadListFragment : Fragment() {
 
                 is WattpadListViewModel.State.Loaded -> {
                     binding.loading.visibility = View.GONE
-                    binding.recyclerView.adapter =
-                        WattpadListAdapter(state.items, this::openDetail)
+                    binding.recyclerView.adapter = WattpadListAdapter(state.items, this::openDetail)
+
+                    binding.recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+                        override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
+                            super.onScrollStateChanged(recyclerView, newState)
+                            if(newState == AbsListView.OnScrollListener.SCROLL_STATE_TOUCH_SCROLL){
+                                isLoading = true
+                            }
+                        }
+
+                        override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                            super.onScrolled(recyclerView, dx, dy)
+
+                            var currentItems = layoutManager.childCount
+                            var totalItems = layoutManager.itemCount
+                            var scrollOutItems = layoutManager.findFirstVisibleItemPosition()
+
+                            if(isLoading && (currentItems + scrollOutItems == totalItems)){
+                                viewModel.loadMoreStories()
+                            }
+                        }
+                    })
                 }
 
                 is WattpadListViewModel.State.Error -> {
@@ -92,5 +108,13 @@ class WattpadListFragment : Fragment() {
 
     private fun openDetail(story: Story) {
         StoryDetailActivity.open(requireContext(), story)
+    }
+
+    companion object {
+        var isLoading = false
+
+        fun setIsLoading(value: Boolean) {
+            isLoading = value
+        }
     }
 }

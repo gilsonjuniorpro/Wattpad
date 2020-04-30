@@ -18,7 +18,7 @@ class WattpadController {
         }
 
         fun getStoriesCall(offset: Int, limit: Int, fields: String, filter: String): Call<WattpadResponse>? {
-            return getRetrofit()?.getStories()
+            return getRetrofit()?.getStories(offset, limit, fields, filter)
         }
     }
 }

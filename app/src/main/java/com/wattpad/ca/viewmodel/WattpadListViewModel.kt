@@ -6,9 +6,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wattpad.ca.controller.WattpadController
 import com.wattpad.ca.core.WattpadApplication
+import com.wattpad.ca.fragments.WattpadListFragment
 import com.wattpad.ca.model.Story
 import com.wattpad.ca.model.WattpadHttp
 import com.wattpad.ca.model.WattpadResponse
+import com.wattpad.ca.util.Utils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -18,13 +20,21 @@ import retrofit2.Response
 
 class WattpadListViewModel() : ViewModel() {
     private val _state = MutableLiveData<State>()
+
+    private var offset = 0
+    private var limit = 10
+    private var listStories: MutableList<Story> = mutableListOf()
+
     val state: LiveData<State>
         get() = _state
 
     fun loadStories() {
         if (_state.value != null) return
-
         //search()
+        searchRetrofit()
+    }
+
+    fun loadMoreStories() {
         searchRetrofit()
     }
 
@@ -48,7 +58,7 @@ class WattpadListViewModel() : ViewModel() {
     //if you prefer to use retrofit
     fun searchRetrofit() {
         val fields = "stories(id,title,cover,user)"
-        val call = WattpadController.getStoriesCall(0, 10, fields, "new")
+        val call = WattpadController.getStoriesCall(offset, limit, fields, "new")
 
         call?.enqueue(object : Callback<WattpadResponse> {
             override fun onFailure(call: Call<WattpadResponse>?, t: Throwable?) {
@@ -64,12 +74,16 @@ class WattpadListViewModel() : ViewModel() {
                 if (result?.stories == null) {
                     _state.value = State.Error(Exception("Error loading stories"), false)
                 } else {
-                    _state.value = State.Loaded(result.stories)
+                    offset = Utils.extractOffset(result.nextUrl)
+                    WattpadListFragment.setIsLoading(false)
+                    for(story in result.stories){
+                        listStories.add(story)
+                    }
+                    _state.value = State.Loaded(listStories)
                 }
             }
         })
     }
-
     sealed class State {
         object Loading : State()
         data class Loaded(val items: List<Story>) : State()
